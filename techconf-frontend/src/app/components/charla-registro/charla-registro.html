@@ -1,0 +1,129 @@
+<div class="container">
+  @if(mensajeError) {
+    <p class="error" role="alert">{{ mensajeError }}</p>
+  }
+  <div class="form-section">
+    <h2>Registrar Nueva Charla</h2>
+    
+    @if(mensajeExito) {
+      <div class="alert success">{{ mensajeExito }}</div>
+    }
+
+    <form [formGroup]="registroForm" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label>Título de la Charla:</label>
+        <input type="text" formControlName="titulo" placeholder="Ej. Arquitectura Hexagonal">
+      </div>
+
+      <div class="form-group">
+        <label>Expositor:</label>
+        <input type="text" formControlName="expositor" placeholder="Nombre completo">
+      </div>
+
+      <div class="form-group">
+        <label>Nivel de la Charla:</label>
+        <select formControlName="nivel">
+          <option value="Principiante">Principiante</option>
+          <option value="Intermedio">Intermedio</option>
+          <option value="Avanzado">Avanzado</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Email de Contacto:</label>
+        <input type="email" formControlName="emailContacto" placeholder="correo@ejemplo.com">
+      </div>
+      <div class="fechas-container">
+        <div class="form-group">
+          <label>Fecha de Inicio:</label>
+          <input type="date" formControlName="fechaInicio">
+        </div>
+        <div class="form-group">
+          <label>Fecha de Fin:</label>
+          <input type="date" formControlName="fechaFin">
+        </div>
+      </div>
+      @if(registroForm.errors?.['fechasInvalidas'] && registroForm.touched) {
+        <div class="error general-error" style="color: red; margin-bottom: 10px;">
+          La fecha de fin no puede ser anterior a la de inicio.
+        </div>
+      }
+      <fieldset formArrayName="etiquetas" class="tags-section">
+        <legend>Etiquetas Tecnológicas (Tags)</legend>
+        
+        @for(control of etiquetasArray.controls; track $index) {
+          <div class="dynamic-row" style="display: flex; gap: 10px; margin-bottom: 10px;">
+            <input type="text" [formControlName]="$index" placeholder="Ej. Spring Boot">
+            
+            @if(etiquetasArray.length > 1) {
+              <button type="button" class="btn-danger" (click)="removerEtiqueta($index)">X</button>
+            }
+          </div>
+        }
+        <button type="button" class="btn-secondary" (click)="agregarEtiqueta()">+ Añadir Otra Etiqueta</button>
+      </fieldset>
+
+      <button type="submit" [disabled]="registroForm.invalid || guardandoCharla" class="submit-btn" style="margin-top: 20px;">
+        Guardar Charla
+      </button>
+    </form>
+  </div>
+  <div class="list-section">
+    <h2>Agenda de TechConf</h2>
+    <div class="card-grid">
+      @for(charla of charlas; track charla.id) {
+        <div class="card" style="border: 1px solid #ccc; padding: 15px; margin-bottom: 10px;">
+          <h3>{{ charla.titulo }}</h3>
+          <h4>Asistentes inscritos ({{ charla.asistentes?.length || 0 }})</h4>
+          <ul>
+            @for(asistente of charla.asistentes; track asistente.id) {
+              <li>{{ asistente.nombre }} — {{ asistente.correo }} — {{ asistente.edad }} años</li>
+            } @empty {
+              <li>No hay asistentes inscritos.</li>
+            }
+          </ul>
+          <button type="button" (click)="abrirInscripcion(charla)" [disabled]="inscribiendo">Inscribir Asistente</button>
+          @if(charlaSeleccionada === charla) {
+            <form [formGroup]="inscripcionForm" (ngSubmit)="inscribirAsistente()">
+              <fieldset formGroupName="asistente" [disabled]="inscribiendo">
+                <legend>Inscripción de asistente</legend>
+                <label for="nombre">Nombre completo</label>
+                <input id="nombre" type="text" formControlName="nombre">
+                @if(asistenteForm.controls.nombre.invalid && asistenteForm.controls.nombre.touched) {
+                  <p class="error">El nombre es obligatorio y debe tener al menos 3 caracteres.</p>
+                }
+                <label for="correo">Correo electrónico</label>
+                <input id="correo" type="email" formControlName="correo">
+                @if(asistenteForm.controls.correo.invalid && asistenteForm.controls.correo.touched) {
+                  <p class="error">Ingresa un correo electrónico válido.</p>
+                }
+                <label for="edad">Edad</label>
+                <input id="edad" type="number" formControlName="edad" min="19" step="1">
+                @if(asistenteForm.controls.edad.invalid && asistenteForm.controls.edad.touched) {
+                  <p class="error">La edad es obligatoria y debe ser un número entero mayor de 18.</p>
+                }
+                <button type="submit" [disabled]="inscripcionForm.invalid || inscribiendo">Confirmar inscripción</button>
+                <button type="button" (click)="charlaSeleccionada = null">Cancelar</button>
+              </fieldset>
+            </form>
+          }
+          <p><strong>Expositor:</strong> {{ charla.expositor }}</p>
+          <p><strong>Fechas:</strong> {{ charla.fechaInicio }} al {{ charla.fechaFin }}</p>
+          <p><strong>Nivel:</strong> <span class="badge">{{ charla.nivel }}</span></p>
+          <div class="tags-display" style="margin-top: 10px;">
+            <strong>Etiquetas: </strong>
+            @for(tag of charla.etiquetas; track $index) {
+              <span class="tag-badge" style="background-color: #007bff; color: white; padding: 3px 8px; border-radius: 12px; margin-right: 5px; font-size: 0.8em;">
+                {{ tag }}
+              </span>
+            } @empty {
+              <span style="font-size: 0.8em; color: gray;">Sin etiquetas</span>
+            }
+          </div>
+        </div>
+      } @empty {
+        <p>No hay charlas registradas aún en el sistema.</p>
+      }
+    </div>
+  </div>
+</div>
