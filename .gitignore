@@ -1,0 +1,7 @@
+**/node_modules/
+**/dist/
+**/.angular/
+**/target/
+**/.git-backup/
+.github/modernize/
+tmp/
